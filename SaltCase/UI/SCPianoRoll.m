@@ -159,6 +159,7 @@ typedef NS_ENUM(NSInteger, SCPianoRollTool) {
 }
 
 - (void)restoreNotes:(NSArray*)notes {
+    [[self.editUndoManager prepareWithInvocationTarget:self] deleteNotes:notes];
     for (SCPianoRollNote* note in notes) {
         [self addSubview:note];
         [self.noteViews addObject:note];
@@ -228,7 +229,10 @@ typedef NS_ENUM(NSInteger, SCPianoRollTool) {
 }
 
 - (void)deleteNotes:(NSArray*)notes {
+    [[self.editUndoManager prepareWithInvocationTarget:self] restoreNotes:notes];
     for (SCPianoRollNote* note in notes) { [note removeFromSuperview]; [self.noteViews removeObject:note]; }
+    [self.selectedNoteViews removeObjectsInArray:notes];
+    if ([self.delegate respondsToSelector:@selector(pianoRollDidUpdate:)]) [self.delegate pianoRollDidUpdate:self];
 }
 
 - (void)keyDown:(NSEvent*)event {
@@ -464,6 +468,10 @@ typedef NS_ENUM(NSInteger, SCPianoRollTool) {
     [self addSubview:note];
     [self.noteViews addObject:note];
     [self selectNote:note extending:NO];
+    // Register note creation so both Cmd-Z and Shift-Cmd-Z can traverse it.
+    [[self.editUndoManager prepareWithInvocationTarget:self] deleteNotes:@[note]];
+    if ([self.delegate respondsToSelector:@selector(pianoRollDidUpdate:)]) [self.delegate pianoRollDidUpdate:self];
+    if ([self.delegate respondsToSelector:@selector(pianoRollSelectionDidChange:)]) [self.delegate pianoRollSelectionDidChange:self];
     [self.window makeFirstResponder:self];
 }
 - (void)mouseDragged:(NSEvent *)theEvent {
