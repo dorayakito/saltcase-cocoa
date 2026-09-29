@@ -1,109 +1,117 @@
-# SaltCase
+# SaltCase Cocoa
 
-Editor e sintetizador vocal para macOS, com piano roll, edição de expressões e compatibilidade inicial com o ecossistema UTAU/OpenUtau.
+Native macOS vocal editor and synthesizer built with Objective-C and AppKit. **SaltCase Cocoa** is the Cocoa implementation of SaltCase, featuring a piano roll, per-note expression editing, MIDI support, and initial UTAU/OpenUtau interoperability.
 
-> Estado atual: protótipo funcional em modernização. O núcleo de edição, persistência, importação MIDI/USTX e reprodução estão operacionais; voicebanks e drivers de áudio devem ser validados na máquina do usuário.
+> **Current status:** functional prototype under active modernization. The editing core, project persistence, MIDI/USTX import, and playback are operational. Voicebanks and audio drivers should be validated on the user’s machine.
 
-[Repositório](https://github.com/dorayakito/saltcase-rt) · [Issues](https://github.com/dorayakito/saltcase-rt/issues) · [OpenUtau](https://github.com/stakira/OpenUtau)
+[Repository](https://github.com/dorayakito/saltcase-rt) · [Issues](https://github.com/dorayakito/saltcase-rt/issues) · [OpenUtau](https://github.com/stakira/OpenUtau)
 
-SaltCase é a continuação do trabalho iniciado no SugarCape, originalmente desenvolvido para composição vocal japonesa. A interface atual está sendo reconstruída com foco em edição rápida, feedback visual claro e atalhos inspirados em editores modernos como o OpenUtau.
+![SaltCase Cocoa editor](assets/saltcase-editor.png)
 
-![Interface atual do SaltCase](assets/saltcase-editor.png)
+*Current editor: piano roll, timeline ruler, transport controls, and expression panel.*
 
-*Interface atual do editor: piano roll, régua de tempo, controles de transporte e painel de expressões.*
+SaltCase Cocoa continues the work started by SugarCape, originally created for Japanese vocal composition. This codebase focuses on a native macOS workflow with fast editing, clear visual feedback, and keyboard shortcuts inspired by modern vocal editors such as OpenUtau.
 
-## Sumário
+## Contents
 
-- [Recursos](#recursos)
-- [Formatos](#formatos)
-- [Primeiros passos](#primeiros-passos)
-- [Atalhos](#atalhos)
-- [Compilação](#compilação)
-- [Arquitetura](#arquitetura)
-- [Limitações conhecidas](#limitações-conhecidas)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
+- [Features](#features)
+- [Supported formats](#supported-formats)
+- [Getting started](#getting-started)
+- [Keyboard shortcuts](#keyboard-shortcuts)
+- [Building](#building)
+- [Architecture](#architecture)
+- [Known limitations](#known-limitations)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Recursos
+## Features
 
 ### Piano roll
 
-- Ferramentas Select, Pencil e Erase.
-- Seleção múltipla com `Shift` e seleção retangular com `Option` + arrasto.
-- Movimento, redimensionamento e transposição de notas.
-- Snapping configurável, zoom e régua de tempo no topo.
-- Playhead navegável por clique e arrasto na timeline.
-- Undo/redo integrado ao documento.
-- Copiar, recortar e colar preservando posição, duração, lyric, fonema, volume, vibrato e pitch bend.
-- Feedback visual de seleção, hover, volume e pitch bend.
+- Select, Pencil, and Erase tools.
+- Multi-selection with `Shift` and rectangular selection with `Option` + drag.
+- Note movement, resizing, and transposition.
+- Configurable snapping, zoom, and a timeline ruler at the top of the editor.
+- Playhead navigation by clicking or dragging the timeline ruler.
+- Document-integrated undo and redo.
+- Copy, cut, and paste preserving position, duration, lyrics, phonemes, volume, vibrato, and pitch bend.
+- Visual feedback for selection, hover, volume, and pitch bend.
 
-### Reprodução e síntese
+### Playback and synthesis
 
-- Reprodução em tempo real com Play/Stop.
-- Tempo entre 40 e 320 BPM.
-- Loop, metrônomo e controle de volume.
-- Síntese vocal baseada nos recursos de áudio existentes do projeto.
-- Exportação de áudio pelos formatos suportados pelo sistema.
+- Real-time Play/Stop controls.
+- Tempo range from 40 to 320 BPM.
+- Loop, metronome, and playback volume controls.
+- Vocal synthesis based on the project’s existing audio resources.
+- Audio export through the formats supported by the system.
 
-### Expressões por nota
+### Per-note expressions
 
-O painel inferior permite editar lyric, fonema personalizado, volume, vibrato e pitch bend. Os valores são persistidos no projeto e usados durante a geração dos eventos de áudio.
+The bottom expression panel provides editing for:
+
+- lyrics;
+- custom phonemes;
+- volume;
+- vibrato;
+- pitch bend.
+
+Expression values are persisted in the project and used when audio events are generated.
 
 ### Interface
 
-- Toolbar moderna com efeito visual nativo do macOS.
-- Painel de expressões responsivo.
-- Janela com tamanho mínimo para evitar clipping dos controles.
-- Indicadores visuais de ferramenta ativa e reprodução.
-- Grade escura com linhas de pitch alternadas e batidas fortes destacadas.
+- Modern toolbar using native macOS visual effects.
+- Responsive expression panel.
+- Minimum window size to prevent control clipping.
+- Visual indicators for the active tool and playback state.
+- Dark piano-roll grid with alternating pitch rows and emphasized beats.
 
-## Formatos
+## Supported formats
 
-| Formato | Abrir/importar | Exportar | Observação |
+| Format | Open/import | Export | Notes |
 | --- | :---: | :---: | --- |
-| Projeto SaltCase | Sim | Sim | JSON versionado, extensão `.scase` |
-| Standard MIDI | Sim | Sim | `.mid` e `.midi`, notas e velocity |
-| OpenUtau USTX | Sim | Não | `.ustx`, importação básica de BPM, posição, duração, tom e lyric |
+| SaltCase project | Yes | Yes | Versioned JSON, `.scase` extension |
+| Standard MIDI | Yes | Yes | `.mid` and `.midi`, notes and velocity |
+| OpenUtau USTX | Yes | No | `.ustx`, basic BPM, position, duration, tone, and lyric import |
 
-Projetos SaltCase usam `formatVersion: 2`. Arquivos de versões futuras são recusados explicitamente para evitar perda silenciosa de dados.
+SaltCase projects use `formatVersion: 2`. Projects created by future versions are rejected explicitly to prevent silent data loss.
 
-## Primeiros passos
+## Getting started
 
-1. Abra o projeto no Xcode ou compile pela linha de comando.
-2. Execute o app gerado em `build/Build/Products/Debug/SaltCase.app`.
-3. Crie notas com a ferramenta Pencil ou abra um arquivo `.scase`, `.mid`, `.midi` ou `.ustx`.
-4. Selecione uma nota para editar lyric, fonema e expressões no painel inferior.
-5. Use a régua no topo do piano roll para navegar pela playhead.
-6. Pressione `Space` para reproduzir.
+1. Open the project in Xcode or build it from the command line.
+2. Run the app from `build/Build/Products/Debug/SaltCase.app`.
+3. Draw notes with the Pencil tool or open a `.scase`, `.mid`, `.midi`, or `.ustx` file.
+4. Select a note to edit its lyric, phoneme, and expression values in the bottom panel.
+5. Use the timeline ruler above the piano roll to navigate the playhead.
+6. Press `Space` to start playback.
 
-## Atalhos
+## Keyboard shortcuts
 
-| Atalho | Ação |
+| Shortcut | Action |
 | --- | --- |
-| `Space` | Reproduzir/parar |
+| `Space` | Play/stop |
 | `1`, `2`, `3` | Select, Pencil, Erase |
-| `Shift` + clique | Adicionar à seleção |
-| `Option` + arrasto | Seleção retangular |
-| `Delete` / `Backspace` | Apagar notas selecionadas |
-| `⌘ C`, `⌘ X`, `⌘ V` | Copiar, recortar, colar |
-| `⌘ Z` / `⇧⌘ Z` | Desfazer/refazer |
-| Setas | Transpor notas |
-| `⌘` + ↑/↓ | Transpor uma oitava |
-| `⌘` + ←/→ | Mover no tempo |
-| `Option` + ←/→ | Alterar duração |
-| `P` | Ativar/desativar snapping |
+| `Shift` + click | Add to selection |
+| `Option` + drag | Rectangular selection |
+| `Delete` / `Backspace` | Delete selected notes |
+| `⌘ C`, `⌘ X`, `⌘ V` | Copy, cut, paste |
+| `⌘ Z` / `⇧⌘ Z` | Undo/redo |
+| Arrow keys | Transpose notes |
+| `⌘` + ↑/↓ | Transpose one octave |
+| `⌘` + ←/→ | Move notes in time |
+| `Option` + ←/→ | Change note duration |
+| `P` | Toggle snapping |
 | `Q` / `E` | Zoom out/in |
-| Clique/arrasto na régua | Navegar a playhead |
+| Click/drag the ruler | Navigate the playhead |
 
-## Compilação
+## Building
 
-### Requisitos
+### Requirements
 
-- macOS 12 Monterey ou posterior;
-- Xcode 27 ou posterior;
-- arquitetura Apple Silicon ou Intel suportada pelo Xcode instalado.
+- macOS 12 Monterey or later;
+- Xcode 27 or later;
+- an Apple Silicon or Intel Mac supported by the installed Xcode version.
 
-### Build
+### Build the app
 
 ```sh
 xcodebuild \
@@ -114,13 +122,13 @@ xcodebuild \
   build
 ```
 
-O aplicativo será gerado em `build/Build/Products/Debug/SaltCase.app`.
+The app is generated at `build/Build/Products/Debug/SaltCase.app`.
 
 ```sh
 open build/Build/Products/Debug/SaltCase.app
 ```
 
-### Testes
+### Run tests
 
 ```sh
 xcodebuild \
@@ -131,45 +139,45 @@ xcodebuild \
   test
 ```
 
-A suíte cobre persistência, limites de expressão, eventos de áudio, pitch bend, versionamento de projetos e importação USTX.
+The test suite covers persistence, expression limits, audio events, pitch bend, project versioning, and basic USTX import.
 
-## Arquitetura
+## Architecture
 
 ```text
 SCDocument
-├── Persistência JSON versionada
-├── Importação MIDI / USTX
+├── Versioned JSON persistence
+├── MIDI / USTX import
 ├── SCNote
-│   └── lyric, fonema, volume, vibrato, pitch bend
+│   └── lyric, phoneme, volume, vibrato, pitch bend
 └── SCCompositionController
-    ├── Toolbar e painel de expressões
+    ├── Toolbar and expression panel
     ├── SCPianoRoll
-    │   ├── edição e seleção
-    │   ├── snapping, zoom e timeline
-    │   └── undo/redo e clipboard
-    └── SCSynth / instrumentos vocais
+    │   ├── editing and selection
+    │   ├── snapping, zoom, and timeline
+    │   └── undo/redo and clipboard
+    └── SCSynth / vocal instruments
 ```
 
-O projeto é Objective-C/AppKit e usa Cocoa, AudioToolbox, QuartzCore e UniformTypeIdentifiers. O scheme compartilhado está em `SaltCase.xcodeproj/xcshareddata/xcschemes` para facilitar builds consistentes.
+SaltCase Cocoa is an Objective-C/AppKit application using Cocoa, AudioToolbox, QuartzCore, and UniformTypeIdentifiers. The shared Xcode scheme is stored in `SaltCase.xcodeproj/xcshareddata/xcschemes` for consistent builds across machines.
 
-## Limitações conhecidas
+## Known limitations
 
-- A importação USTX é deliberadamente básica e ainda não preserva trilhas múltiplas, voicebanks, fonemização avançada ou curvas completas de expressão.
-- Voicebanks e amostras dependem dos recursos incluídos/configurados localmente.
-- Alguns componentes da XIB original ainda podem emitir avisos de depreciação no macOS recente.
-- A interface principal é voltada para macOS; não há suporte mobile nesta etapa.
+- USTX import is intentionally basic and does not yet preserve multiple tracks, voicebanks, advanced phonemization, or complete expression curves.
+- Voicebanks and samples depend on resources included with or configured for the local installation.
+- Some components inherited from the original XIB may still emit deprecation warnings on recent macOS versions.
+- The main interface is macOS-specific; mobile support is not part of this stage.
 
-## Contribuição
+## Contributing
 
-1. Crie uma branch para sua alteração.
-2. Mantenha o projeto compilável.
-3. Adicione ou atualize testes ao alterar modelos, importadores ou síntese.
-4. Execute `xcodebuild ... test` antes de abrir um pull request.
-5. Descreva alterações de formato, atalhos ou comportamento visual.
+1. Create a branch for your change.
+2. Keep the project buildable.
+3. Add or update tests when changing models, importers, or synthesis.
+4. Run `xcodebuild ... test` before opening a pull request.
+5. Clearly describe changes to formats, shortcuts, or visual behavior.
 
-Issues e pull requests são bem-vindos, especialmente para melhorias de importação USTX/MIDI, voicebanks, acessibilidade e testes de interface.
+Issues and pull requests are welcome, especially for USTX/MIDI import improvements, voicebanks, accessibility, and interface testing.
 
-## Licença
+## License
 
 MIT License
 
