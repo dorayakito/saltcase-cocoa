@@ -40,7 +40,7 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
-				<string>usxt</string>
+				<string>ustx</string>
 			</array>
 			<key>CFBundleTypeName</key>
 			<string>OpenUtau USTX Project</string>

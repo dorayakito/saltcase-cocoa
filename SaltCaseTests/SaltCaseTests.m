@@ -198,7 +198,7 @@
     SCDocument* composition = [[SCDocument alloc] init];
     NSError* error = nil;
     XCTAssertTrue([composition readFromData:[ustx dataUsingEncoding:NSUTF8StringEncoding]
-                                     ofType:@"usxt" error:&error]);
+                                     ofType:@"ustx" error:&error]);
     XCTAssertNil(error);
     XCTAssertEqualWithAccuracy(composition.tempo, 132.0f, 0.001f);
     XCTAssertEqual(composition.notes.count, 1);

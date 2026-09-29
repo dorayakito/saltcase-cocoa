@@ -282,7 +282,7 @@ static NSArray* SCNotesFromUSTXData(NSData* data, float* tempoOut) {
                                                    userInfo:@{NSLocalizedDescriptionKey: @"Não foi possível abrir o arquivo MIDI."}];
         return NO;
     }
-    if ([fileType isEqualToString:@"usxt"]) {
+    if ([fileType isEqualToString:@"ustx"]) {
         float importedTempo = kSCDefaultTempo;
         NSArray* importedNotes = SCNotesFromUSTXData(data, &importedTempo);
         if (!importedNotes) {
