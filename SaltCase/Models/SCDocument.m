@@ -86,21 +86,31 @@ static NSArray* SCNotesFromUSTXData(NSData* data, float* tempoOut) {
     NSArray* lines = [source componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
     SCNote* current = nil;
     for (NSString* rawLine in lines) {
-        NSString* line = [rawLine stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-        if ([line hasPrefix:@"bpm:"]) {
-            if (tempoOut) *tempoOut = [[line substringFromIndex:4] floatValue];
-        } else if ([line hasPrefix:@"- position:"]) {
+        NSString* line = [rawLine stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        if (line.length == 0 || [line hasPrefix:@"#"]) continue;
+        BOOL startsNote = [line hasPrefix:@"-"] && [line rangeOfString:@"position:"].location != NSNotFound;
+        if (startsNote) {
             current = [[SCNote alloc] init];
-            current.startsAt = [[line substringFromIndex:11] doubleValue];
             [notes addObject:current];
-        } else if (current && [line hasPrefix:@"duration:"]) {
-            current.length = [[line substringFromIndex:9] doubleValue];
-        } else if (current && [line hasPrefix:@"tone:"]) {
-            current.pitch = [[line substringFromIndex:5] intValue];
-        } else if (current && [line hasPrefix:@"lyric:"]) {
-            NSString* lyric = [[line substringFromIndex:6] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-            if ([lyric hasPrefix:@"\""] && [lyric hasSuffix:@"\""]) lyric = [lyric substringWithRange:NSMakeRange(1, lyric.length - 2)];
-            current.text = lyric;
+            line = [line substringFromIndex:1];
+        }
+        NSRange separator = [line rangeOfString:@":"];
+        if (separator.location == NSNotFound) continue;
+        NSString* key = [[line substringToIndex:separator.location] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]].lowercaseString;
+        NSString* value = [[line substringFromIndex:separator.location + 1] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        if ([value hasPrefix:@"\""] && [value hasSuffix:@"\""] && value.length >= 2) value = [value substringWithRange:NSMakeRange(1, value.length - 2)];
+        if ([key isEqualToString:@"bpm"]) {
+            if (tempoOut) *tempoOut = value.floatValue;
+        } else if (current && [key isEqualToString:@"position"]) {
+            current.startsAt = value.doubleValue;
+        } else if (current && [key isEqualToString:@"duration"]) {
+            current.length = value.doubleValue;
+        } else if (current && ([key isEqualToString:@"tone"] || [key isEqualToString:@"pitch"])) {
+            current.pitch = value.intValue;
+        } else if (current && [key isEqualToString:@"lyric"]) {
+            current.text = value;
+        } else if (current && [key isEqualToString:@"phoneme"]) {
+            current.phoneme = value;
         }
     }
     return notes;
