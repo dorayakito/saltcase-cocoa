@@ -36,7 +36,7 @@ static void outputCallback(void *inUserData, AudioQueueRef inAQ, AudioQueueBuffe
     maxAmplitude[0] = 0.0f, maxAmplitude[1] = 0.0f;
 
     // Limitter and Low-pass filter (to protect speakers / ears).
-	float volume = 0.5f;
+	float volume = player.volume;
     for(int i = 0; i < numPackets * 2; i++){
         float rawSignal = player.renderBuffer[i] * volume;
 		rawSignal = fmin(0.999f, rawSignal);
@@ -75,6 +75,7 @@ static void outputCallback(void *inUserData, AudioQueueRef inAQ, AudioQueueBuffe
     if (self) {
         self.bufferPacketLength = kSCBufferPacketLength;
         self.metronome = [[SCMetronome alloc] init];
+        self.volume = 0.5f;
     }
     return self;
 }

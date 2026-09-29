@@ -35,7 +35,7 @@
 #pragma mark -
 
 - (BOOL)loadFromFile:(NSString*)filePath {
-    NSURL* urlToLoad = [NSURL URLWithString:[filePath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSURL* urlToLoad = [NSURL fileURLWithPath:filePath];
     OSStatus err = noErr;
     
     // Open the file.

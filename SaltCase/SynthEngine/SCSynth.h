@@ -11,6 +11,7 @@
 @property (strong) id<SCAudioRenderer>renderer;
 @property (readonly) float samplingFrameRate;
 @property (readonly) NSTimeInterval timeElapsed;
+@property (nonatomic, assign) float volume;
 - (void)playWithRenderer:(NSObject<SCAudioRenderer>*)renderer;
 - (void)stop:(BOOL)shouldStopImmediately;
 - (float)levelForChannel:(int)channel;

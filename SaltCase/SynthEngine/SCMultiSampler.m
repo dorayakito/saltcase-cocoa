@@ -41,7 +41,8 @@
         NSArray* voiceFiles = [[NSFileManager defaultManager] subpathsAtPath:[directoryPath stringByAppendingPathComponent:firstKey]];
         NSMutableDictionary* samples = [@{} mutableCopy];
         for (NSString* file in voiceFiles) {
-            NSString* character = [[file stringByDeletingPathExtension] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            NSString* character = [[file stringByDeletingPathExtension]
+                                   stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
             NSLog(@"%@", character);
             NSString* filePath = [[directoryPath stringByAppendingPathComponent:firstKey] stringByAppendingPathComponent:file];
             SCSimpleSampler* sampler = [[SCSimpleSampler alloc] initWithFile:filePath baseFrequency:523.25f];
@@ -64,7 +65,7 @@
     [self.sampler off];
 }
 - (void)setText:(NSString *)text {
-    NSString* escapedText = [text stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    NSString* escapedText = [text stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLQueryAllowedCharacterSet]];
     if (![self.currentText isEqualToString:escapedText]) {
         NSString* foundKey = nil;
         for (NSString* character in self.samples.allKeys) {

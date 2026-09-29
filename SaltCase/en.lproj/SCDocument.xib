@@ -227,7 +227,7 @@
 												<int key="NSvFlags">268</int>
 												<string key="NSFrame">{{15, 12}, {445, 12}}</string>
 												<reference key="NSSuperview" ref="205797055"/>
-												<string key="NSClassName">PlayPosIndicator</string>
+										<string key="NSClassName">NSView</string>
 											</object>
 										</array>
 										<string key="NSFrame">{{1, 1}, {478, 47}}</string>

@@ -18,4 +18,6 @@
 @property (readonly) NSTimeInterval lengthInSeconds;
 - (IBAction)exportVocal:(id)sender;
 - (IBAction)exportAll:(id)sender;
+- (IBAction)importMIDI:(id)sender;
+- (IBAction)exportMIDI:(id)sender;
 @end

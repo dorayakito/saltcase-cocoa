@@ -13,6 +13,10 @@
 @property (assign) float length;
 @property (assign) int pitch;
 @property (strong) NSString* text;
+@property (strong) NSString* phoneme;
+@property (assign) float volume;
+@property (assign) float vibrato;
+@property (assign) float pitchBend;
 - (NSDictionary*)dictionaryRepresentation;
 - (id)initWithDictionary:(NSDictionary*)dictionary;
 

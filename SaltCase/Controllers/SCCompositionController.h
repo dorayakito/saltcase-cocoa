@@ -33,4 +33,5 @@
 @property (weak) IBOutlet NSScrollView *keyboardScroll;
 @property (strong) SCMetronome* metronome;
 - (void)exportWithStyle:(SCExportStyle)style;
+- (void)reloadEditor;
 @end

@@ -41,7 +41,7 @@
         OSStatus error = noErr;
         AudioStreamBasicDescription processFormat = [self processFormat];
         AudioStreamBasicDescription outFormat = [self outputFormat];
-        ExtAudioFileRef outFileRef;
+        ExtAudioFileRef outFileRef = NULL;
         
         // Create a file
         error = ExtAudioFileCreateWithURL((__bridge CFURLRef)url_, kAudioFileWAVEType, &outFormat, NULL, 0, &outFileRef);
@@ -58,7 +58,8 @@
         }
         
         UInt32 allocByteSize = convertFrames * processFormat.mBytesPerFrame;
-        float *ioData = malloc(allocByteSize);
+        float *ioData = NULL;
+        ioData = malloc(allocByteSize);
         if (!ioData) {
             NSLog(@"Failed to allocate memory.");
             goto ExitExport;
@@ -70,14 +71,16 @@
         ioList.mBuffers[0].mData = ioData;
         
         for (int i = 0; i < self.numOfFrames; i += convertFrames) {
+            UInt32 framesThisBlock = (UInt32)MIN((int)convertFrames, self.numOfFrames - i);
             float* buf = ioList.mBuffers[0].mData;
-            for (int j = 0; j < convertFrames; j++) {
+            for (UInt32 j = 0; j < convertFrames; j++) {
                 *buf++ = 0.0f; // left
                 *buf++ = 0.0f; // right
             }
-            [self.renderer renderBuffer:ioList.mBuffers[0].mData numOfPackets:convertFrames sender:synth];
-            
-            error = ExtAudioFileWrite(outFileRef, convertFrames, &ioList);
+            [self.renderer renderBuffer:ioList.mBuffers[0].mData numOfPackets:framesThisBlock sender:synth];
+
+            ioList.mBuffers[0].mDataByteSize = framesThisBlock * processFormat.mBytesPerFrame;
+            error = ExtAudioFileWrite(outFileRef, framesThisBlock, &ioList);
             if (error != noErr) goto ExitExport;
             
             if (updateHandler_) {
