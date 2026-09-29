@@ -8,6 +8,10 @@ Editor e sintetizador vocal para macOS, com piano roll, edição de expressões 
 
 SaltCase é a continuação do trabalho iniciado no SugarCape, originalmente desenvolvido para composição vocal japonesa. A interface atual está sendo reconstruída com foco em edição rápida, feedback visual claro e atalhos inspirados em editores modernos como o OpenUtau.
 
+![Interface atual do SaltCase](assets/saltcase-editor.png)
+
+*Interface atual do editor: piano roll, régua de tempo, controles de transporte e painel de expressões.*
+
 ## Sumário
 
 - [Recursos](#recursos)

@@ -167,8 +167,9 @@
 
 - (void)installTimelineRuler {
     NSRect scrollFrame = self.scrollView.frame;
+    CGFloat rulerY = NSMinY(self.editorToolbar.frame) - 52.0;
     self.timelineRuler = [[SCTimelineRulerView alloc] initWithFrame:NSMakeRect(scrollFrame.origin.x,
-                                                                                NSMaxY(scrollFrame) - 26.0,
+                                                                                rulerY,
                                                                                 scrollFrame.size.width, 26.0)];
     self.timelineRuler.gridInterval = pianoRoll.gridHorizontalInterval;
     self.timelineRuler.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
