@@ -24,6 +24,8 @@
 
 @interface SCTimelineRulerView : NSView
 @property (nonatomic) CGFloat gridInterval;
+@property (nonatomic) CGFloat contentOffset;
+@property (nonatomic) CGFloat leadingInset;
 @property (nonatomic, copy) void (^seekHandler)(CGFloat beat);
 @end
 
@@ -34,8 +36,11 @@
 - (void)drawRect:(NSRect)dirtyRect {
     [[NSColor colorWithCalibratedWhite:0.07 alpha:0.98] setFill];
     NSRectFill(self.bounds);
-    for (NSInteger column = 0; column * self.gridInterval <= self.bounds.size.width; column++) {
-        CGFloat x = column * self.gridInterval;
+    CGFloat start = self.leadingInset - fmod(self.contentOffset, self.gridInterval);
+    NSInteger firstColumn = MAX(0, (NSInteger)floor(self.contentOffset / self.gridInterval));
+    for (NSInteger column = firstColumn; start + (column - firstColumn) * self.gridInterval <= self.bounds.size.width; column++) {
+        CGFloat x = start + (column - firstColumn) * self.gridInterval;
+        if (x < self.leadingInset) continue;
         BOOL bar = column % 4 == 0;
         [[NSColor colorWithCalibratedWhite:(bar ? 0.86 : 0.48) alpha:(bar ? 0.9 : 0.65)] set];
         [NSBezierPath strokeLineFromPoint:NSMakePoint(x, self.bounds.size.height)
@@ -47,7 +52,8 @@
     }
 }
 - (void)seekFromEvent:(NSEvent*)event {
-    CGFloat beat = MAX(0.0, [self convertPoint:event.locationInWindow fromView:nil].x / self.gridInterval);
+    CGFloat x = [self convertPoint:event.locationInWindow fromView:nil].x - self.leadingInset + self.contentOffset;
+    CGFloat beat = MAX(0.0, x / self.gridInterval);
     if (self.seekHandler) self.seekHandler(beat);
 }
 - (void)mouseDown:(NSEvent*)event { dragging = YES; [self seekFromEvent:event]; }
@@ -80,6 +86,10 @@
 @property (strong) NSTextField* expressionPhonemeField;
 @property (strong) NSArray<NSButton*>* editorToolButtons;
 @property (strong) SCTimelineRulerView* timelineRuler;
+@property (strong) NSSplitView* editorSplitView;
+@property (strong) NSSplitView* workspaceSplitView;
+@property (strong) NSTextField* expressionStateLabel;
+@property (strong) NSArray<NSControl*>* expressionControls;
 @end
 
 @implementation SCCompositionController
@@ -104,7 +114,17 @@
 
 - (void)pianoRollSelectionDidChange:(id)sender {
     SCPianoRollNote* note = pianoRoll.selectedNotes.firstObject;
-    if (!note) return;
+    BOOL hasSelection = note != nil;
+    self.expressionStateLabel.hidden = hasSelection;
+    for (NSControl* control in self.expressionControls) control.enabled = hasSelection;
+    if (!note) {
+        self.expressionVolumeSlider.floatValue = 1.0;
+        self.expressionVibratoSlider.floatValue = 0.0;
+        self.expressionPitchSlider.floatValue = 0.0;
+        self.expressionLyricField.stringValue = @"";
+        self.expressionPhonemeField.stringValue = @"";
+        return;
+    }
     self.expressionVolumeSlider.floatValue = note.volume;
     self.expressionVibratoSlider.floatValue = note.vibrato;
     self.expressionPitchSlider.floatValue = note.pitchBend;
@@ -115,11 +135,12 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
 
+    self.window.toolbar = nil;
     self.window.minSize = NSMakeSize(960.0, 640.0);
     self.window.titleVisibility = NSWindowTitleVisible;
     self.window.titlebarAppearsTransparent = YES;
     self.window.title = @"SaltCase · Editor";
-    self.window.toolbarStyle = NSWindowToolbarStyleUnified;
+    self.window.toolbarStyle = NSWindowToolbarStyleAutomatic;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioBufferDidUpdate:) name:SCBufferUpdateNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(editorToolDidChange:) name:@"SCPianoRollActiveToolDidChange" object:pianoRoll];
@@ -137,17 +158,7 @@
     SCKeyboardView* keyboard = [[SCKeyboardView alloc] initWithFrame:NSMakeRect(0.0f, 0.0f, self.keyboardScroll.contentView.frame.size.width, maxHeight)];
     self.keyboardScroll.documentView = keyboard;
     
-    float pianoSliderHeight = self.scrollView.horizontalScroller.frame.size.height;
-    
-    pianoRollXScaleSlider = [[NSSlider alloc] initWithFrame:CGRectMake(0.0f, 0.0f, self.keyboardScroll.frame.size.width, pianoSliderHeight)];
-    pianoRollXScaleSlider.maxValue = kSCPianoRollHorizontalMaxGridInterval;
-    pianoRollXScaleSlider.minValue = kSCPianoRollHorizontalMinGridInterval;
-    [pianoRollXScaleSlider setFloatValue:kSCPianoRollHorizontalGridInterval]; // TODO: Restore setting.
-    [self.mainView addSubview:pianoRollXScaleSlider];
-    [pianoRollXScaleSlider setTarget:self];
-    [pianoRollXScaleSlider setAction:@selector(pianoRollXScaleSliderDidUpdate:)];
-    
-    self.keyboardScroll.frame = CGRectMake(0.0f, self.keyboardScroll.frame.origin.y + pianoSliderHeight, self.keyboardScroll.frame.size.width, self.keyboardScroll.frame.size.height - pianoSliderHeight);
+    [self installWorkspaceLayout];
     
     // Synchronize scrolling between the piano roll and the keyboard view.
     // http://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/NSScrollViewGuide/Articles/SynchroScroll.html
@@ -165,12 +176,59 @@
 
 }
 
+- (void)installWorkspaceLayout {
+    [self.scrollView removeFromSuperview];
+    [self.keyboardScroll removeFromSuperview];
+
+    self.workspaceSplitView = [[NSSplitView alloc] initWithFrame:NSZeroRect];
+    self.workspaceSplitView.translatesAutoresizingMaskIntoConstraints = NO;
+    self.workspaceSplitView.vertical = YES;
+    self.workspaceSplitView.dividerStyle = NSSplitViewDividerStyleThin;
+    self.workspaceSplitView.autoresizesSubviews = YES;
+    [self.workspaceSplitView addArrangedSubview:self.keyboardScroll];
+    [self.workspaceSplitView addArrangedSubview:self.scrollView];
+    [self.workspaceSplitView setHoldingPriority:NSLayoutPriorityRequired forSubviewAtIndex:0];
+    [self.keyboardScroll.widthAnchor constraintGreaterThanOrEqualToConstant:132.0].active = YES;
+    [self.scrollView.widthAnchor constraintGreaterThanOrEqualToConstant:420.0].active = YES;
+    [self.workspaceSplitView setPosition:132.0 ofDividerAtIndex:0];
+
+    self.editorSplitView = [[NSSplitView alloc] initWithFrame:NSZeroRect];
+    self.editorSplitView.translatesAutoresizingMaskIntoConstraints = NO;
+    self.editorSplitView.vertical = NO;
+    self.editorSplitView.dividerStyle = NSSplitViewDividerStyleThin;
+    [self.editorSplitView addArrangedSubview:self.workspaceSplitView];
+    [self.editorSplitView addArrangedSubview:self.expressionPanel];
+    [self.workspaceSplitView.heightAnchor constraintGreaterThanOrEqualToConstant:300.0].active = YES;
+    [self.expressionPanel.heightAnchor constraintGreaterThanOrEqualToConstant:150.0].active = YES;
+    [self.editorSplitView setPosition:500.0 ofDividerAtIndex:0];
+
+    [self.mainView addSubview:self.editorSplitView positioned:NSWindowBelow relativeTo:self.editorToolbar];
+    [NSLayoutConstraint activateConstraints:@[
+        [self.editorToolbar.leadingAnchor constraintEqualToAnchor:self.mainView.leadingAnchor],
+        [self.editorToolbar.trailingAnchor constraintEqualToAnchor:self.mainView.trailingAnchor],
+        [self.editorToolbar.topAnchor constraintEqualToAnchor:self.mainView.topAnchor],
+        [self.editorToolbar.heightAnchor constraintEqualToConstant:42.0],
+        [self.timelineRuler.leadingAnchor constraintEqualToAnchor:self.mainView.leadingAnchor],
+        [self.timelineRuler.trailingAnchor constraintEqualToAnchor:self.mainView.trailingAnchor],
+        [self.timelineRuler.topAnchor constraintEqualToAnchor:self.editorToolbar.bottomAnchor],
+        [self.timelineRuler.heightAnchor constraintEqualToConstant:26.0],
+        [self.editorSplitView.leadingAnchor constraintEqualToAnchor:self.mainView.leadingAnchor],
+        [self.editorSplitView.trailingAnchor constraintEqualToAnchor:self.mainView.trailingAnchor],
+        [self.editorSplitView.topAnchor constraintEqualToAnchor:self.timelineRuler.bottomAnchor],
+        [self.editorSplitView.bottomAnchor constraintEqualToAnchor:self.mainView.bottomAnchor]
+    ]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.workspaceSplitView setPosition:132.0 ofDividerAtIndex:0];
+        [self.editorSplitView setPosition:MAX(320.0, self.mainView.bounds.size.height - 190.0) ofDividerAtIndex:0];
+        self.timelineRuler.leadingInset = self.workspaceSplitView.subviews.firstObject.frame.size.width;
+        [self.timelineRuler setNeedsDisplay:YES];
+    });
+}
+
 - (void)installTimelineRuler {
-    NSRect scrollFrame = self.scrollView.frame;
-    CGFloat rulerY = NSMinY(self.editorToolbar.frame) - 52.0;
-    self.timelineRuler = [[SCTimelineRulerView alloc] initWithFrame:NSMakeRect(scrollFrame.origin.x,
-                                                                                rulerY,
-                                                                                scrollFrame.size.width, 26.0)];
+    self.timelineRuler = [[SCTimelineRulerView alloc] initWithFrame:NSZeroRect];
+    self.timelineRuler.translatesAutoresizingMaskIntoConstraints = NO;
+    self.timelineRuler.leadingInset = 132.0;
     self.timelineRuler.gridInterval = pianoRoll.gridHorizontalInterval;
     self.timelineRuler.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
     __weak typeof(self) weakSelf = self;
@@ -184,47 +242,50 @@
 }
 
 - (void)installExpressionPanel {
-    self.expressionPanel = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, 0, self.mainView.bounds.size.width, 64)];
+    self.expressionPanel = [[NSVisualEffectView alloc] initWithFrame:NSZeroRect];
     self.expressionPanel.material = NSVisualEffectMaterialUnderWindowBackground;
     self.expressionPanel.blendingMode = NSVisualEffectBlendingModeWithinWindow;
     self.expressionPanel.state = NSVisualEffectStateActive;
-    self.expressionPanel.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
-
-    NSStackView* stack = [[NSStackView alloc] initWithFrame:NSMakeRect(14, 12, 560, 40)];
+    NSStackView* stack = [[NSStackView alloc] initWithFrame:NSZeroRect];
     stack.translatesAutoresizingMaskIntoConstraints = NO;
-    stack.orientation = NSUserInterfaceLayoutOrientationHorizontal;
-    stack.spacing = 8;
-    stack.alignment = NSLayoutAttributeCenterY;
-    [stack addArrangedSubview:[NSTextField labelWithString:@"Expressions"]];
+    stack.orientation = NSUserInterfaceLayoutOrientationVertical;
+    stack.spacing = 6;
+    stack.edgeInsets = NSEdgeInsetsMake(10, 14, 10, 14);
 
     self.expressionVolumeSlider = [self expressionSliderWithTitle:@"Volume" min:0 max:1 action:@selector(expressionVolumeChanged:)];
     self.expressionVibratoSlider = [self expressionSliderWithTitle:@"Vibrato" min:0 max:1 action:@selector(expressionVibratoChanged:)];
     self.expressionPitchSlider = [self expressionSliderWithTitle:@"Pitch" min:-1 max:1 action:@selector(expressionPitchChanged:)];
-    [stack addArrangedSubview:[NSTextField labelWithString:@"Vol"]];
-    [stack addArrangedSubview:self.expressionVolumeSlider];
-    [stack addArrangedSubview:[NSTextField labelWithString:@"Vibrato"]];
-    [stack addArrangedSubview:self.expressionVibratoSlider];
-    [stack addArrangedSubview:[NSTextField labelWithString:@"Pitch"]];
-    [stack addArrangedSubview:self.expressionPitchSlider];
+    NSStackView* expressionRow = [NSStackView stackViewWithViews:@[[NSTextField labelWithString:@"Expressions"], [NSTextField labelWithString:@"Volume"], self.expressionVolumeSlider, [NSTextField labelWithString:@"Vibrato"], self.expressionVibratoSlider, [NSTextField labelWithString:@"Pitch"], self.expressionPitchSlider]];
+    expressionRow.spacing = 8;
+    expressionRow.alignment = NSLayoutAttributeCenterY;
+    for (NSSlider* slider in @[self.expressionVolumeSlider, self.expressionVibratoSlider, self.expressionPitchSlider]) [slider.widthAnchor constraintEqualToConstant:110].active = YES;
     self.expressionLyricField = [NSTextField textFieldWithString:@""];
-    self.expressionLyricField.placeholderString = @"Letra";
+    self.expressionLyricField.placeholderString = @"Lyric";
     self.expressionLyricField.target = self;
     self.expressionLyricField.action = @selector(expressionLyricChanged:);
-    self.expressionLyricField.toolTip = @"Letra das notas selecionadas";
+    self.expressionLyricField.toolTip = @"Lyric for selected notes";
     self.expressionPhonemeField = [NSTextField textFieldWithString:@""];
-    self.expressionPhonemeField.placeholderString = @"Fonema";
+    self.expressionPhonemeField.placeholderString = @"Phoneme";
     self.expressionPhonemeField.target = self;
     self.expressionPhonemeField.action = @selector(expressionPhonemeChanged:);
-    self.expressionPhonemeField.toolTip = @"Fonema personalizado";
-    [stack addArrangedSubview:self.expressionLyricField];
-    [stack addArrangedSubview:self.expressionPhonemeField];
+    self.expressionPhonemeField.toolTip = @"Custom phoneme";
+    self.expressionStateLabel = [NSTextField labelWithString:@"Select a note to edit expressions"];
+    self.expressionStateLabel.textColor = [NSColor secondaryLabelColor];
+    NSStackView* lyricRow = [NSStackView stackViewWithViews:@[[NSTextField labelWithString:@"Lyric"], self.expressionLyricField, [NSTextField labelWithString:@"Phoneme"], self.expressionPhonemeField]];
+    lyricRow.spacing = 8;
+    [self.expressionLyricField setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
+    [self.expressionPhonemeField setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
+    [stack addArrangedSubview:self.expressionStateLabel];
+    [stack addArrangedSubview:expressionRow];
+    [stack addArrangedSubview:lyricRow];
     [self.expressionPanel addSubview:stack];
     [NSLayoutConstraint activateConstraints:@[
         [stack.leadingAnchor constraintEqualToAnchor:self.expressionPanel.leadingAnchor constant:14.0],
         [stack.trailingAnchor constraintEqualToAnchor:self.expressionPanel.trailingAnchor constant:-14.0],
         [stack.centerYAnchor constraintEqualToAnchor:self.expressionPanel.centerYAnchor]
     ]];
-    [self.mainView addSubview:self.expressionPanel positioned:NSWindowAbove relativeTo:nil];
+    self.expressionControls = @[self.expressionVolumeSlider, self.expressionVibratoSlider, self.expressionPitchSlider, self.expressionLyricField, self.expressionPhonemeField];
+    [self pianoRollSelectionDidChange:nil];
 }
 
 - (NSSlider*)expressionSliderWithTitle:(NSString*)title min:(double)min max:(double)max action:(SEL)action {
@@ -295,12 +356,11 @@
     [pianoRoll.delegate pianoRollDidUpdate:pianoRoll];
 }
 - (void)installEditorToolbar {
-    self.editorToolbar = [[NSVisualEffectView alloc] initWithFrame:NSMakeRect(0, self.mainView.bounds.size.height - 42,
-                                                                                self.mainView.bounds.size.width, 42)];
+    self.editorToolbar = [[NSVisualEffectView alloc] initWithFrame:NSZeroRect];
+    self.editorToolbar.translatesAutoresizingMaskIntoConstraints = NO;
     self.editorToolbar.material = NSVisualEffectMaterialHeaderView;
     self.editorToolbar.blendingMode = NSVisualEffectBlendingModeWithinWindow;
     self.editorToolbar.state = NSVisualEffectStateActive;
-    self.editorToolbar.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
 
     NSStackView* controls = [[NSStackView alloc] initWithFrame:NSMakeRect(12, 7, 390, 28)];
     controls.translatesAutoresizingMaskIntoConstraints = NO;
@@ -317,7 +377,7 @@
         button.tag = [definition[1] integerValue];
         button.buttonType = NSButtonTypeToggle;
         button.bezelStyle = NSBezelStyleTexturedRounded;
-        button.toolTip = [NSString stringWithFormat:@"%@ (tecla %@)", definition[0], definition[1]];
+        button.toolTip = [NSString stringWithFormat:@"%@ (key %@)", definition[0], definition[1]];
         [controls addArrangedSubview:button];
     }
     self.editorToolButtons = [controls.arrangedSubviews filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(NSView* view, NSDictionary* bindings) {
@@ -326,13 +386,13 @@
     [self editorToolDidChange:nil];
     NSButton* snap = [NSButton checkboxWithTitle:@"Snap" target:self action:@selector(editorSnapButtonPressed:)];
     snap.state = pianoRoll.snappingEnabled ? NSControlStateValueOn : NSControlStateValueOff;
-    snap.toolTip = @"Ativar ou desativar encaixe na grade (P)";
+    snap.toolTip = @"Toggle grid snapping (P)";
     [controls addArrangedSubview:snap];
 
     NSButton* zoomOut = [NSButton buttonWithTitle:@"−" target:self action:@selector(editorZoomOut:)];
     NSButton* zoomIn = [NSButton buttonWithTitle:@"+" target:self action:@selector(editorZoomIn:)];
-    zoomOut.toolTip = @"Reduzir zoom (Q)";
-    zoomIn.toolTip = @"Aumentar zoom (E)";
+    zoomOut.toolTip = @"Zoom out (Q)";
+    zoomIn.toolTip = @"Zoom in (E)";
     [controls addArrangedSubview:zoomOut];
     [controls addArrangedSubview:zoomIn];
     [self.editorToolbar addSubview:controls];
@@ -344,10 +404,10 @@
     transport.alignment = NSLayoutAttributeCenterY;
     self.editorPlayButton = [NSButton buttonWithTitle:@"▶  Play" target:self action:@selector(playComposition:)];
     self.editorPlayButton.bezelStyle = NSBezelStyleTexturedRounded;
-    self.editorPlayButton.toolTip = @"Reproduzir (Espaço)";
+    self.editorPlayButton.toolTip = @"Play (Space)";
     self.editorStopButton = [NSButton buttonWithTitle:@"■  Stop" target:self action:@selector(stopComposition:)];
     self.editorStopButton.bezelStyle = NSBezelStyleTexturedRounded;
-    self.editorStopButton.toolTip = @"Parar reprodução";
+    self.editorStopButton.toolTip = @"Stop playback";
     [transport addArrangedSubview:self.editorPlayButton];
     [transport addArrangedSubview:self.editorStopButton];
 
@@ -374,12 +434,21 @@
     self.editorVolumeSlider.controlSize = NSControlSizeSmall;
     self.editorVolumeSlider.toolTip = @"Volume de reprodução";
     [transport addArrangedSubview:self.editorVolumeSlider];
-    NSButton* importMIDI = [NSButton buttonWithTitle:@"MIDI ⇩" target:self action:@selector(importMIDI:)];
-    NSButton* exportMIDI = [NSButton buttonWithTitle:@"MIDI ⇧" target:self action:@selector(exportMIDI:)];
-    importMIDI.toolTip = @"Importar MIDI";
-    exportMIDI.toolTip = @"Exportar MIDI";
-    [transport addArrangedSubview:importMIDI];
-    [transport addArrangedSubview:exportMIDI];
+    NSPopUpButton* more = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:YES];
+    [more addItemWithTitle:@"More…"];
+    more.toolTip = @"File actions, exports, and settings";
+    NSMenu* menu = [[NSMenu alloc] initWithTitle:@"More"];
+    [menu addItem:[[NSMenuItem alloc] initWithTitle:@"Import MIDI…" action:@selector(importMIDI:) keyEquivalent:@""]];
+    [menu addItem:[[NSMenuItem alloc] initWithTitle:@"Export MIDI…" action:@selector(exportMIDI:) keyEquivalent:@""]];
+    [menu addItem:[[NSMenuItem alloc] initWithTitle:@"Export Vocal Track…" action:@selector(exportVocal:) keyEquivalent:@""]];
+    [menu addItem:[[NSMenuItem alloc] initWithTitle:@"Export All Tracks…" action:@selector(exportAll:) keyEquivalent:@""]];
+    [menu addItem:[NSMenuItem separatorItem]];
+    [menu addItem:[[NSMenuItem alloc] initWithTitle:@"Settings…" action:@selector(openSettings:) keyEquivalent:@","]];
+    for (NSMenuItem* item in menu.itemArray) item.target = self;
+    menu.itemArray[2].target = self.composition;
+    menu.itemArray[3].target = self.composition;
+    more.menu = menu;
+    [transport addArrangedSubview:more];
     [self.editorToolbar addSubview:transport];
     [NSLayoutConstraint activateConstraints:@[
         [controls.leadingAnchor constraintEqualToAnchor:self.editorToolbar.leadingAnchor constant:12.0],
@@ -411,9 +480,13 @@
 }
 - (void)editorZoomIn:(id)sender {
     pianoRoll.gridHorizontalInterval = fminf(kSCPianoRollHorizontalMaxGridInterval, pianoRoll.gridHorizontalInterval * 1.15f);
+    self.timelineRuler.gridInterval = pianoRoll.gridHorizontalInterval;
+    [self.timelineRuler setNeedsDisplay:YES];
 }
 - (void)editorZoomOut:(id)sender {
     pianoRoll.gridHorizontalInterval = fmaxf(kSCPianoRollHorizontalMinGridInterval, pianoRoll.gridHorizontalInterval / 1.15f);
+    self.timelineRuler.gridInterval = pianoRoll.gridHorizontalInterval;
+    [self.timelineRuler setNeedsDisplay:YES];
 }
 - (void)editorTempoChanged:(NSSlider*)sender {
     self.composition.tempo = sender.floatValue;
@@ -464,6 +537,8 @@
     changedBoundsOrigin.x = 0.0f;
     [self.keyboardScroll.contentView scrollToPoint:changedBoundsOrigin];
     [self.keyboardScroll reflectScrolledClipView:self.keyboardScroll.contentView];
+    self.timelineRuler.contentOffset = self.scrollView.contentView.bounds.origin.x;
+    [self.timelineRuler setNeedsDisplay:YES];
 }
 - (void)keyboardViewDidScroll:(NSNotification*)note {
     NSClipView *changedContentView = note.object;

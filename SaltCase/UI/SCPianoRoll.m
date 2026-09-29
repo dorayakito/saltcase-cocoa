@@ -19,7 +19,6 @@
     BOOL selectingRect;
     NSRect selectionRect;
     NSMutableDictionary* dragOriginalFrames;
-    BOOL seekingPlayhead;
 }
 @property (strong) NSMutableArray* noteViews;
 @property (weak) SCPianoRollNote* selectedNote;
@@ -29,7 +28,6 @@
 @end
 
 static NSString* const SCPianoRollNotesPasteboardType = @"com.saltcase.notes";
-static const CGFloat kSCPianoRollTimelineHeight = 28.0;
 typedef NS_ENUM(NSInteger, SCPianoRollTool) {
     SCPianoRollToolSelect = 1,
     SCPianoRollToolPencil = 2,
@@ -357,27 +355,6 @@ typedef NS_ENUM(NSInteger, SCPianoRollTool) {
         [NSBezierPath strokeRect:selectionRect];
     }
 
-    NSRect timeline = NSMakeRect(dirtyRect.origin.x, self.bounds.size.height - kSCPianoRollTimelineHeight,
-                                 dirtyRect.size.width, kSCPianoRollTimelineHeight);
-    [[NSColor colorWithCalibratedWhite:0.07 alpha:0.96] setFill];
-    NSRectFill(timeline);
-    [[NSColor colorWithCalibratedWhite:0.42 alpha:0.8] set];
-    [NSBezierPath strokeLineFromPoint:NSMakePoint(timeline.origin.x, timeline.origin.y)
-                              toPoint:NSMakePoint(NSMaxX(timeline), timeline.origin.y)];
-    NSInteger rulerColumn = 0;
-    for (float rulerX = 0.0; rulerX <= self.bounds.size.width; rulerX += self.gridHorizontalInterval, rulerColumn++) {
-        BOOL strongBeat = rulerColumn % 4 == 0;
-        [[NSColor colorWithCalibratedWhite:(strongBeat ? 0.85 : 0.48)
-                                     alpha:(strongBeat ? 0.9 : 0.65)] set];
-        [NSBezierPath strokeLineFromPoint:NSMakePoint(rulerX, timeline.origin.y)
-                                  toPoint:NSMakePoint(rulerX, timeline.origin.y + (strongBeat ? 16.0 : 9.0))];
-        if (strongBeat) {
-            NSString* label = [NSString stringWithFormat:@"%ld", (long)(rulerColumn / 4 + 1)];
-            [label drawAtPoint:NSMakePoint(rulerX + 4.0, timeline.origin.y + 10.0)
-                withAttributes:@{NSFontAttributeName: [NSFont systemFontOfSize:10.0],
-                                 NSForegroundColorAttributeName: [NSColor secondaryLabelColor]}];
-        }
-    }
 }
 
 - (double)beatPositionAtPoint:(NSPoint)point {
@@ -406,15 +383,6 @@ typedef NS_ENUM(NSInteger, SCPianoRollTool) {
         context.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionLinear];
         self.timingBar.animator.frame = nextFrame;
     } completionHandler:nil];
-}
-
-- (void)seekPlayheadAtPoint:(NSPoint)point {
-    double beat = MAX(0.0, point.x / self.gridHorizontalInterval);
-    NSRect frame = self.timingBar.frame;
-    frame.origin.x = beat * self.gridHorizontalInterval;
-    self.timingBar.frame = frame;
-    if ([self.delegate respondsToSelector:@selector(pianoRollDidSeekToBeat:)])
-        [self.delegate pianoRollDidSeekToBeat:beat];
 }
 
 #pragma mark SCPianoRollNoteDelegate
@@ -469,13 +437,6 @@ typedef NS_ENUM(NSInteger, SCPianoRollTool) {
 - (void)mouseDown:(NSEvent *)theEvent {
     NSPoint cursorAt = [self pointOfEvent:theEvent];
 
-    if (cursorAt.y >= self.bounds.size.height - kSCPianoRollTimelineHeight) {
-        seekingPlayhead = YES;
-        [self seekPlayheadAtPoint:cursorAt];
-        [self.window makeFirstResponder:self];
-        return;
-    }
-
     if (theEvent.modifierFlags & NSEventModifierFlagOption) {
         selectingRect = YES;
         selectionOrigin = cursorAt;
@@ -506,10 +467,6 @@ typedef NS_ENUM(NSInteger, SCPianoRollTool) {
     [self.window makeFirstResponder:self];
 }
 - (void)mouseDragged:(NSEvent *)theEvent {
-    if (seekingPlayhead) {
-        [self seekPlayheadAtPoint:[self pointOfEvent:theEvent]];
-        return;
-    }
     if (selectingRect) {
         NSPoint current = [self pointOfEvent:theEvent];
         selectionRect = NSMakeRect(MIN(selectionOrigin.x, current.x), MIN(selectionOrigin.y, current.y),
@@ -520,10 +477,6 @@ typedef NS_ENUM(NSInteger, SCPianoRollTool) {
     [self moveSelectedStretchTo:[self pointOfEvent:theEvent]];
 }
 - (void)mouseUp:(NSEvent *)theEvent {
-    if (seekingPlayhead) {
-        seekingPlayhead = NO;
-        return;
-    }
     if (selectingRect) {
         selectingRect = NO;
         for (SCPianoRollNote* note in self.noteViews) {
