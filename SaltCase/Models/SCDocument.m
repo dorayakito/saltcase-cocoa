@@ -293,6 +293,14 @@ static NSArray* SCNotesFromUSTXData(NSData* data, float* tempoOut) {
         return NO;
     }
     if ([fileType isEqualToString:@"ustx"]) {
+        // Some converters/exporters use the .ustx extension for a SaltCase
+        // JSON document. Let the normal project reader handle that variant.
+        NSString* text = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        NSString* trimmedText = [text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        NSString* firstCharacter = trimmedText.length > 0 ? [trimmedText substringToIndex:1] : @"";
+        if ([firstCharacter isEqualToString:@"{"]) {
+            fileType = @"scase";
+        } else {
         float importedTempo = kSCDefaultTempo;
         NSArray* importedNotes = SCNotesFromUSTXData(data, &importedTempo);
         if (!importedNotes) {
@@ -303,6 +311,7 @@ static NSArray* SCNotesFromUSTXData(NSData* data, float* tempoOut) {
         self.tempo = importedTempo;
         self.notes = importedNotes;
         return YES;
+        }
     }
     NSError* error = nil;
     NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
