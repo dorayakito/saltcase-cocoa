@@ -2,7 +2,7 @@
 
 Native macOS vocal editor and synthesizer built with Objective-C and AppKit. **SaltCase Cocoa** is the Cocoa implementation of SaltCase, featuring a piano roll, per-note expression editing, MIDI support, and initial UTAU/OpenUtau interoperability.
 
-> **Current status:** functional prototype under active modernization. The editing core, project persistence, MIDI/USTX import, and playback are operational. Voicebanks and audio drivers should be validated on the user’s machine.
+> **Current status:** functional prototype under active modernization. SaltCase was largely dormant for approximately 14 years and is gradually coming back to life. The editing core, project persistence, MIDI/USTX import, and playback are operational, but common bugs and rough edges are still expected while the legacy codebase is being restored. Voicebanks and audio drivers should be validated on the user’s machine.
 
 [Repository](https://github.com/dorayakito/saltcase-rt) · [Issues](https://github.com/dorayakito/saltcase-rt/issues) · [OpenUtau](https://github.com/stakira/OpenUtau)
 
@@ -11,6 +11,10 @@ Native macOS vocal editor and synthesizer built with Objective-C and AppKit. **S
 *Current editor: piano roll, timeline ruler, transport controls, and expression panel.*
 
 SaltCase Cocoa continues the work started by SugarCape, originally created for Japanese vocal composition. This codebase focuses on a native macOS workflow with fast editing, clear visual feedback, and keyboard shortcuts inspired by modern vocal editors such as OpenUtau.
+
+### A project coming back to life
+
+SaltCase spent roughly 14 years without active development. The current work is a gradual revival rather than a finished rewrite: some legacy behaviors, incomplete workflows, compatibility issues, and ordinary bugs remain. Feedback, reproducible bug reports, and small contributions are especially valuable as the project is brought back to life one subsystem at a time.
 
 ## Contents
 
