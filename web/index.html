@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SaltCase Cocoa is a native macOS vocal editor and neural synthesis project.">
+  <title>SaltCase Cocoa</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="SaltCase Cocoa home">
+      <span class="brand-mark">SC</span>
+      <span>SaltCase Cocoa</span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#features">Features</a>
+      <a href="#engine">Engine</a>
+      <a href="https://github.com/dorayakito/saltcase-cocoa" target="_blank" rel="noreferrer">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Native macOS vocal composition</p>
+        <h1>Shape voices.<br><span>Compose freely.</span></h1>
+        <p class="lead">SaltCase Cocoa is a piano-roll editor and vocal synthesis workspace built with Objective-C and AppKit.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="https://github.com/dorayakito/saltcase-cocoa" target="_blank" rel="noreferrer">View on GitHub</a>
+          <a class="button secondary" href="#engine">Explore the engine</a>
+        </div>
+      </div>
+      <div class="hero-card" aria-label="SaltCase editor preview">
+        <div class="window-dots"><i></i><i></i><i></i><span>SaltCase · Editor</span></div>
+        <div class="mini-toolbar"><b>✦</b><span> Select</span><span class="active"> Pencil</span><span> Erase</span><em>120 BPM</em></div>
+        <div class="piano-preview">
+          <div class="keys"><span>F2</span><span>E2</span><span>D#2</span><span>D2</span><span>C#2</span><span>C2</span><span>B1</span></div>
+          <div class="grid"><div class="note note-one">ら</div><div class="note note-two">ba</div><div class="playhead"></div></div>
+        </div>
+        <div class="preview-footer">Timeline · Expression dock</div>
+      </div>
+    </section>
+
+    <section class="stats" aria-label="Project highlights">
+      <div><strong>macOS 12+</strong><span>Native AppKit</span></div>
+      <div><strong>MIDI · USTX</strong><span>Project interoperability</span></div>
+      <div><strong>Core ML</strong><span>Neural engine foundation</span></div>
+    </section>
+
+    <section id="features" class="section">
+      <p class="eyebrow">A focused workspace</p>
+      <h2>Everything close to the note.</h2>
+      <div class="feature-grid">
+        <article><span class="icon">⌁</span><h3>Piano roll</h3><p>Draw, select, resize and transpose notes with snapping, zoom and timeline navigation.</p></article>
+        <article><span class="icon">◈</span><h3>Expressions</h3><p>Edit lyrics, phonemes, volume, vibrato and pitch bend without leaving the editor.</p></article>
+        <article><span class="icon">↺</span><h3>Reliable editing</h3><p>Undo, redo, clipboard operations and keyboard shortcuts keep ideas moving quickly.</p></article>
+      </div>
+    </section>
+
+    <section id="engine" class="engine section">
+      <div>
+        <p class="eyebrow">The next voice</p>
+        <h2>A new synthesis direction.</h2>
+        <p>SaltCase is building a local neural synthesis runtime around Core ML and its own <code>.scvoice</code> voicebank format. The editor already passes expressive musical events to the new engine boundary.</p>
+        <p class="notice">A trained neural voicebank is not bundled yet. The current SATURNO source fixture contains <code>a</code>, <code>ga</code>, <code>za</code>, <code>da</code> and <code>ba</code> for future model work.</p>
+      </div>
+      <div class="pipeline" aria-label="Neural synthesis pipeline">
+        <span>Musical event</span><b>→</b><span>Acoustic model</span><b>→</b><span>Vocoder</span><b>→</b><span class="output">Audio</span>
+      </div>
+    </section>
+
+    <section class="section cta">
+      <p class="eyebrow">Open source revival</p>
+      <h2>Built in public, one subsystem at a time.</h2>
+      <p>SaltCase was dormant for years and is gradually coming back to life. Follow the work, report issues and help shape the next generation of the project.</p>
+      <a class="button primary" href="https://github.com/dorayakito/saltcase-cocoa" target="_blank" rel="noreferrer">Visit the repository ↗</a>
+    </section>
+  </main>
+
+  <footer><span>© SaltCase Cocoa</span><span>Objective-C · AppKit · MIT License</span></footer>
+  <script src="script.js"></script>
+</body>
+</html>

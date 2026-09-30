@@ -1,4 +1,4 @@
-# Victor BrApa source voicebank
+# SATURNO source voicebank
 
 This source package is built from `_a_ga_za_da_ba.wav` and contains the five
 detected units:

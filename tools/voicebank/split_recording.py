@@ -49,8 +49,8 @@ def main():
     manifest = {
         "formatVersion": 1,
         "engine": "saltcase-neural-source",
-        "name": "Victor BrApa CVV source",
-        "author": "Victor",
+        "name": "SATURNO CVV source",
+        "author": "SATURNO",
         "license": "User-provided recording; verify redistribution permission",
         "language": "pt-BR",
         "sampleRate": 44100,

@@ -4,7 +4,7 @@ Native macOS vocal editor and synthesizer built with Objective-C and AppKit. **S
 
 > **Current status:** functional prototype under active modernization. SaltCase was largely dormant for approximately 14 years and is gradually coming back to life. The editing core, project persistence, and MIDI/USTX import are operational. The new neural runtime is integrated, but a trained `.scvoice` voicebank is not bundled yet, so audible synthesis is not available in a clean checkout.
 
-[Repository](https://github.com/dorayakito/saltcase-cocoa) · [Issues](https://github.com/dorayakito/saltcase-cocoa/issues) · [OpenUtau](https://github.com/stakira/OpenUtau)
+[Website](https://dorayakito.github.io/saltcase-cocoa/) · [Repository](https://github.com/dorayakito/saltcase-cocoa) · [Issues](https://github.com/dorayakito/saltcase-cocoa/issues) · [OpenUtau](https://github.com/stakira/OpenUtau)
 
 ![SaltCase Cocoa editor](assets/saltcase-editor.png)
 
@@ -192,7 +192,7 @@ MyVoice.scvoice/
 
 The manifest identifies the voice, language, sample rate, supported phonemes, model files, and expressive controls. Voicebanks are local and offline; SaltCase does not download models or train voices inside the application.
 
-The packaging and dataset validation entry points are documented in [`tools/voicebank/README.md`](tools/voicebank/README.md). A small source-segment fixture from the Victor BrApa recording is available at [`voicebanks/Victor-BrApa.scvoice`](voicebanks/Victor-BrApa.scvoice), containing `a`, `ga`, `za`, `da`, and `ba`. A trained, redistributable demo voice is still required before synthesis can be enabled in a fresh installation.
+The packaging and dataset validation entry points are documented in [`tools/voicebank/README.md`](tools/voicebank/README.md). A small source-segment fixture from the SATURNO recording is available at [`voicebanks/SATURNO.scvoice`](voicebanks/SATURNO.scvoice), containing `a`, `ga`, `za`, `da`, and `ba`. A trained, redistributable demo voice is still required before synthesis can be enabled in a fresh installation.
 
 ## Known limitations
 
