@@ -18,7 +18,8 @@
 
 #import "SCVocalInstrument.h"
 #import "SCSineWaveGenerator.h"
-#import "SCMultiSampler.h"
+#import "SCNeuralSynthEngine.h"
+#import "SCNeuralVoiceBank.h"
 #import "SCExporter.h"
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
@@ -66,7 +67,7 @@
     UInt32 nextEventIndex;
     UInt32 renderedPackets;    
     NSSlider* pianoRollXScaleSlider;
-    SCVocalInstrument* vocalLine;
+    SCNeuralSynthEngine* vocalLine;
 }
 @property (strong) NSArray* events;
 @property (strong) NSVisualEffectView* editorToolbar;
@@ -164,8 +165,15 @@
     // http://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/NSScrollViewGuide/Articles/SynchroScroll.html
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pianoRollDidScroll:) name:NSViewBoundsDidChangeNotification object:self.scrollView.contentView];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardViewDidScroll:) name:NSViewBoundsDidChangeNotification object:self.keyboardScroll.contentView];
-    NSString* sampleVoiceDirectory = [[NSBundle mainBundle] pathForResource:@"sample" ofType:nil];
-    vocalLine = [[SCMultiSampler alloc] initWithContentsOfDirectoryAtPath:sampleVoiceDirectory];
+    vocalLine = [[SCNeuralSynthEngine alloc] init];
+    NSString *voiceBankPath = [[NSBundle mainBundle] pathForResource:@"SaltCaseVoice" ofType:@"scvoice"];
+    if (voiceBankPath) {
+        NSError *voiceError = nil;
+        [vocalLine loadVoiceBankAtURL:[NSURL fileURLWithPath:voiceBankPath] error:&voiceError];
+        if (voiceError) NSLog(@"SaltCase neural voicebank unavailable: %@", voiceError.localizedDescription);
+    } else {
+        vocalLine.lastErrorMessage = @"No SaltCase neural voicebank is bundled with this build.";
+    }
     keyboard.vocalLine = vocalLine;
     
     // Scroll to initial point.
@@ -575,9 +583,8 @@
 - (void)processEvent:(SCAudioEvent*)event sender:(SCSynth *)sender {
     switch (event.type) {
         case SCAudioEventNoteOn:
-            [vocalLine setText:event.text];
+            [vocalLine configureFromAudioEvent:event];
             [vocalLine onWithVelocity:event.velocity];
-            [vocalLine setFrequency:event.frequency];
             break;
         case SCAudioEventNoteOff:
             [vocalLine off];
@@ -643,6 +650,12 @@
     [vocalLine off];
 }
 - (IBAction)playComposition:(id)sender {
+    if (!vocalLine.voiceBank.ready && !vocalLine.renderBlock) {
+        self.editorStatusLabel.stringValue = @"Neural voicebank required";
+        NSBeep();
+        NSLog(@"Cannot play: %@", vocalLine.lastErrorMessage ?: @"No neural voicebank loaded.");
+        return;
+    }
     [self.metronome reset];
     self.metronome.tempo = self.composition.tempo;
     

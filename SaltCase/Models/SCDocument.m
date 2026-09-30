@@ -141,6 +141,10 @@ static NSArray* SCNotesFromUSTXData(NSData* data, float* tempoOut) {
         { // Start
             SCAudioEvent* event = [[SCAudioEvent alloc] init];
             event.text = note.phoneme.length > 0 ? note.phoneme : note.text;
+            event.noteId = [NSString stringWithFormat:@"%p", note];
+            event.duration = [note endsAtSecondsInTempo:self.tempo] - [note startsAtSecondsInTempo:self.tempo];
+            event.pitchCurve = @[];
+            event.timbreParameters = @{};
             event.velocity = note.volume > 0.0f ? note.volume : 1.0f;
             event.timing = [note startsAtSecondsInTempo:self.tempo];
             event.type = SCAudioEventNoteOn;
@@ -154,6 +158,10 @@ static NSArray* SCNotesFromUSTXData(NSData* data, float* tempoOut) {
             SCAudioEvent* event = [[SCAudioEvent alloc] init];
             event.timing = [note endsAtSecondsInTempo:self.tempo];
             event.type = SCAudioEventNoteOff;
+            event.noteId = [NSString stringWithFormat:@"%p", note];
+            event.duration = [note endsAtSecondsInTempo:self.tempo] - [note startsAtSecondsInTempo:self.tempo];
+            event.pitchCurve = @[];
+            event.timbreParameters = @{};
             event.note = note;
             event.frequency = [SCPitchUtil frequencyOfPitch:event.pitch] * powf(2.0f, note.pitchBend / 12.0f);
             [events addObject:event];
@@ -169,6 +177,7 @@ static NSArray* SCNotesFromUSTXData(NSData* data, float* tempoOut) {
         if (event.type == SCAudioEventNoteOn) {
             if (notesOn.count > 0) {
                 event.type = SCAudioEventPitchChange;
+                event.isLegato = YES;
                 event.pitch = ((SCNote*)[notesOn lastObject]).pitch;
                 SCNote* activeNote = [notesOn lastObject];
                 event.frequency = [SCPitchUtil frequencyOfPitch:event.pitch] * powf(2.0f, activeNote.pitchBend / 12.0f);
@@ -182,6 +191,7 @@ static NSArray* SCNotesFromUSTXData(NSData* data, float* tempoOut) {
             
             if (notesOn.count > 0) {
                 event.type = SCAudioEventPitchChange;
+                event.isLegato = YES;
                 event.pitch = ((SCNote*)[notesOn lastObject]).pitch;
                 SCNote* activeNote = [notesOn lastObject];
                 event.frequency = [SCPitchUtil frequencyOfPitch:event.pitch] * powf(2.0f, activeNote.pitchBend / 12.0f);

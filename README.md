@@ -2,9 +2,9 @@
 
 Native macOS vocal editor and synthesizer built with Objective-C and AppKit. **SaltCase Cocoa** is the Cocoa implementation of SaltCase, featuring a piano roll, per-note expression editing, MIDI support, and initial UTAU/OpenUtau interoperability.
 
-> **Current status:** functional prototype under active modernization. SaltCase was largely dormant for approximately 14 years and is gradually coming back to life. The editing core, project persistence, MIDI/USTX import, and playback are operational, but common bugs and rough edges are still expected while the legacy codebase is being restored. Voicebanks and audio drivers should be validated on the user’s machine.
+> **Current status:** functional prototype under active modernization. SaltCase was largely dormant for approximately 14 years and is gradually coming back to life. The editing core, project persistence, and MIDI/USTX import are operational. The new neural runtime is integrated, but a trained `.scvoice` voicebank is not bundled yet, so audible synthesis is not available in a clean checkout.
 
-[Repository](https://github.com/dorayakito/saltcase-rt) · [Issues](https://github.com/dorayakito/saltcase-rt/issues) · [OpenUtau](https://github.com/stakira/OpenUtau)
+[Repository](https://github.com/dorayakito/saltcase-cocoa) · [Issues](https://github.com/dorayakito/saltcase-cocoa/issues) · [OpenUtau](https://github.com/stakira/OpenUtau)
 
 ![SaltCase Cocoa editor](assets/saltcase-editor.png)
 
@@ -24,6 +24,7 @@ SaltCase spent roughly 14 years without active development. The current work is 
 - [Keyboard shortcuts](#keyboard-shortcuts)
 - [Building](#building)
 - [Architecture](#architecture)
+- [Neural voicebanks](#neural-voicebanks)
 - [Known limitations](#known-limitations)
 - [Contributing](#contributing)
 - [License](#license)
@@ -46,7 +47,7 @@ SaltCase spent roughly 14 years without active development. The current work is 
 - Real-time Play/Stop controls.
 - Tempo range from 40 to 320 BPM.
 - Loop, metronome, and playback volume controls.
-- Vocal synthesis based on the project’s existing audio resources.
+- A local Core ML synthesis runtime designed for SaltCase neural voicebanks.
 - Audio export through the formats supported by the system.
 
 ### Per-note expressions
@@ -86,7 +87,10 @@ SaltCase projects use `formatVersion: 2`. Projects created by future versions ar
 3. Draw notes with the Pencil tool or open a `.scase`, `.mid`, `.midi`, or `.ustx` file.
 4. Select a note to edit its lyric, phoneme, and expression values in the bottom panel.
 5. Use the timeline ruler above the piano roll to navigate the playhead.
-6. Press `Space` to start playback.
+6. Install a compatible `.scvoice` voicebank when available.
+7. Press `Space` to start playback.
+
+> A clean checkout currently opens and edits projects normally, but does not include a trained neural voicebank. Playback displays `Neural voicebank required` until one is installed.
 
 ## Keyboard shortcuts
 
@@ -159,15 +163,42 @@ SCDocument
     │   ├── editing and selection
     │   ├── snapping, zoom, and timeline
     │   └── undo/redo and clipboard
-    └── SCSynth / vocal instruments
+    └── SCSynth
+        └── SCNeuralSynthEngine
+            ├── SCNeuralVoiceBank
+            ├── acoustic Core ML model
+            └── vocoder Core ML model
 ```
 
 SaltCase Cocoa is an Objective-C/AppKit application using Cocoa, AudioToolbox, QuartzCore, and UniformTypeIdentifiers. The shared Xcode scheme is stored in `SaltCase.xcodeproj/xcshareddata/xcschemes` for consistent builds across machines.
 
+The synthesis boundary is now independent from the editor: `SCAudioEvent` carries musical and expressive conditioning, while `SCNeuralSynthEngine` consumes a SaltCase `.scvoice` package. A voicebank contains an acoustic Core ML model and a vocoder Core ML model. The repository currently includes the runtime contracts and packaging tools, but not a trained voicebank or training dataset; playback is intentionally silent until a compatible voicebank is installed.
+
+Voicebank tooling is located in [`tools/voicebank`](tools/voicebank). The application never trains models, accesses the network, or silently falls back to the retired WAV sampler.
+
+## Neural voicebanks
+
+SaltCase uses its own `.scvoice` package format. A package contains:
+
+```text
+MyVoice.scvoice/
+├── manifest.json
+├── acoustic.mlmodelc
+├── vocoder.mlmodelc
+├── phonemes.json
+├── timbre.json
+└── preview.m4a
+```
+
+The manifest identifies the voice, language, sample rate, supported phonemes, model files, and expressive controls. Voicebanks are local and offline; SaltCase does not download models or train voices inside the application.
+
+The packaging and dataset validation entry points are documented in [`tools/voicebank/README.md`](tools/voicebank/README.md). A small source-segment fixture from the Victor BrApa recording is available at [`voicebanks/Victor-BrApa.scvoice`](voicebanks/Victor-BrApa.scvoice), containing `a`, `ga`, `za`, `da`, and `ba`. A trained, redistributable demo voice is still required before synthesis can be enabled in a fresh installation.
+
 ## Known limitations
 
 - USTX import is intentionally basic and does not yet preserve multiple tracks, voicebanks, advanced phonemization, or complete expression curves.
-- Voicebanks and samples depend on resources included with or configured for the local installation.
+- A trained `.scvoice` package is not bundled yet, so the neural renderer reports a missing voicebank and produces silence until one is installed.
+- The Core ML input/output contract is intentionally versioned through `manifest.json`; model training and export are still separate work.
 - Some components inherited from the original XIB may still emit deprecation warnings on recent macOS versions.
 - The main interface is macOS-specific; mobile support is not part of this stage.
 

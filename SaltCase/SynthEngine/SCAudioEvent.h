@@ -18,6 +18,11 @@ typedef enum SCAudioEventType {
 @property (assign) float frequency;
 @property (assign) int pitch;
 @property (strong) NSString* text;
+@property (strong) NSArray<NSNumber*>* pitchCurve;
+@property (strong) NSDictionary* timbreParameters;
+@property (strong) NSString* noteId;
+@property (assign) NSTimeInterval duration;
+@property (assign) BOOL isLegato;
 @property (assign) float velocity;
 @property (assign) NSTimeInterval timing;
 @property (assign) UInt32 timingPacketNumber;

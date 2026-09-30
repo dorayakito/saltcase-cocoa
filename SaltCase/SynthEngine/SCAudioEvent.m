@@ -10,6 +10,15 @@
 
 @implementation SCAudioEvent
 
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        _pitchCurve = @[];
+        _timbreParameters = @{};
+    }
+    return self;
+}
+
 - (NSString*)description {
     return [NSString stringWithFormat:@"%.2f(%d) - %d", self.timing, self.timingPacketNumber, self.type];
 }

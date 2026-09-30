@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2A0000010000000000000001 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A0000020000000000000002 /* CoreML.framework */; };
+		2A0000030000000000000003 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A0000020000000000000002 /* CoreML.framework */; };
+		2A0000040000000000000004 /* SCNeuralRenderContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A0000140000000000000014 /* SCNeuralRenderContext.m */; };
+		2A0000050000000000000005 /* SCNeuralSynthEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A0000160000000000000016 /* SCNeuralSynthEngine.m */; };
+		2A0000060000000000000006 /* SCNeuralVoiceBank.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A0000180000000000000018 /* SCNeuralVoiceBank.m */; };
 		1900B33715C52C4E00E75714 /* SCSineWaveGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 1900B33615C52C4E00E75714 /* SCSineWaveGenerator.m */; };
 		1900B33815C52C4E00E75714 /* SCSineWaveGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 1900B33615C52C4E00E75714 /* SCSineWaveGenerator.m */; };
 		191A0B6715C81132009EC315 /* SCSimpleSampler.m in Sources */ = {isa = PBXBuildFile; fileRef = 191A0B6615C81132009EC315 /* SCSimpleSampler.m */; };
@@ -76,6 +81,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2A0000020000000000000002 /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
+		2A0000130000000000000013 /* SCNeuralRenderContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SCNeuralRenderContext.h; sourceTree = "<group>"; };
+		2A0000140000000000000014 /* SCNeuralRenderContext.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SCNeuralRenderContext.m; sourceTree = "<group>"; };
+		2A0000150000000000000015 /* SCNeuralSynthEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SCNeuralSynthEngine.h; sourceTree = "<group>"; };
+		2A0000160000000000000016 /* SCNeuralSynthEngine.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SCNeuralSynthEngine.m; sourceTree = "<group>"; };
+		2A0000170000000000000017 /* SCNeuralVoiceBank.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SCNeuralVoiceBank.h; sourceTree = "<group>"; };
+		2A0000180000000000000018 /* SCNeuralVoiceBank.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SCNeuralVoiceBank.m; sourceTree = "<group>"; };
+		2A0000190000000000000019 /* SCVocalSynthEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SCVocalSynthEngine.h; sourceTree = "<group>"; };
 		1900B33515C52C4E00E75714 /* SCSineWaveGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCSineWaveGenerator.h; sourceTree = "<group>"; };
 		1900B33615C52C4E00E75714 /* SCSineWaveGenerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SCSineWaveGenerator.m; sourceTree = "<group>"; };
 		191A0B6515C81132009EC315 /* SCSimpleSampler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCSimpleSampler.h; sourceTree = "<group>"; };
@@ -149,6 +162,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A0000010000000000000001 /* CoreML.framework in Frameworks */,
 				1948353415B5AC7C003D90E8 /* QuartzCore.framework in Frameworks */,
 				1948353515B5AC7C003D90E8 /* UniformTypeIdentifiers.framework in Frameworks */,
 				1992DC6115A9736F00AC074F /* AudioToolbox.framework in Frameworks */,
@@ -160,6 +174,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A0000030000000000000003 /* CoreML.framework in Frameworks */,
 				19C6273E15C3B82E00B0BB96 /* QuartzCore.framework in Frameworks */,
 				1995A82815AC678900678A93 /* AudioToolbox.framework in Frameworks */,
 				196B16A915A93CE0008E59D0 /* XCTest.framework in Frameworks */,
@@ -296,6 +311,13 @@
 		1992DC5A15A9732500AC074F /* SynthEngine */ = {
 			isa = PBXGroup;
 			children = (
+				2A0000130000000000000013 /* SCNeuralRenderContext.h */,
+				2A0000140000000000000014 /* SCNeuralRenderContext.m */,
+				2A0000150000000000000015 /* SCNeuralSynthEngine.h */,
+				2A0000160000000000000016 /* SCNeuralSynthEngine.m */,
+				2A0000170000000000000017 /* SCNeuralVoiceBank.h */,
+				2A0000180000000000000018 /* SCNeuralVoiceBank.m */,
+				2A0000190000000000000019 /* SCVocalSynthEngine.h */,
 				191A0B7215C81BAF009EC315 /* SYError.h */,
 				191A0B6A15C81B92009EC315 /* SYExtAudioFile.h */,
 				191A0B6B15C81B92009EC315 /* SYExtAudioFile.m */,
@@ -494,11 +516,12 @@
 				19FF80F515BD97B500198F79 /* SCPitchUtil.m in Sources */,
 				1900B33715C52C4E00E75714 /* SCSineWaveGenerator.m in Sources */,
 				1948170615C6C82500C338A6 /* SCVocalInstrument.m in Sources */,
-				191A0B6715C81132009EC315 /* SCSimpleSampler.m in Sources */,
 				191A0B6E15C81B92009EC315 /* SYExtAudioFile.m in Sources */,
 				191A0B7015C81B92009EC315 /* SYLinearPCMData.m in Sources */,
 				19D90E9515D921B9004C7317 /* SCExporter.m in Sources */,
-				198BC32C162024C7004C5010 /* SCMultiSampler.m in Sources */,
+				2A0000040000000000000004 /* SCNeuralRenderContext.m in Sources */,
+				2A0000050000000000000005 /* SCNeuralSynthEngine.m in Sources */,
+				2A0000060000000000000006 /* SCNeuralVoiceBank.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

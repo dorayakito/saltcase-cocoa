@@ -11,6 +11,7 @@
 #import "SCNote.h"
 #import "SCAudioEvent.h"
 #import "SCPitchUtil.h"
+#import "SCNeuralVoiceBank.h"
 
 @implementation SaltCaseTests
 
@@ -149,6 +150,20 @@
     SCAudioEvent* startEvent = composition.audioEvents.firstObject;
     XCTAssertEqualObjects(startEvent.text, @"ra");
     XCTAssertEqualWithAccuracy(startEvent.velocity, 0.64f, 0.001f);
+    XCTAssertEqualObjects(startEvent.pitchCurve, @[]);
+    XCTAssertEqualObjects(startEvent.timbreParameters, @{});
+    XCTAssertTrue(startEvent.duration > 0.0);
+    XCTAssertNotNil(startEvent.noteId);
+}
+
+- (void)testNeuralVoiceBankRejectsMissingPackage {
+    NSError *error = nil;
+    SCNeuralVoiceBank *voiceBank = [[SCNeuralVoiceBank alloc]
+                                    initWithURL:[NSURL fileURLWithPath:@"/tmp/does-not-exist.scvoice"]
+                                    error:&error];
+    XCTAssertNil(voiceBank);
+    XCTAssertEqual(error.domain, SCNeuralVoiceBankErrorDomain);
+    XCTAssertEqual(error.code, 1);
 }
 
 - (void)testPitchBendChangesAudioFrequency {

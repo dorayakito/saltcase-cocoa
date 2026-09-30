@@ -1,0 +1,52 @@
+{
+  "formatVersion": 1,
+  "engine": "saltcase-neural-source",
+  "name": "Victor BrApa CVV source",
+  "author": "Victor",
+  "license": "User-provided recording; verify redistribution permission",
+  "language": "pt-BR",
+  "sampleRate": 44100,
+  "phonemeSet": "saltcase-v1",
+  "sourceRecording": "_a_ga_za_da_ba.wav",
+  "phonemes": [
+    "a",
+    "ga",
+    "za",
+    "da",
+    "ba"
+  ],
+  "segments": [
+    {
+      "phoneme": "a",
+      "audio": "samples/a.wav",
+      "startSeconds": 0.2,
+      "endSeconds": 0.85
+    },
+    {
+      "phoneme": "ga",
+      "audio": "samples/ga.wav",
+      "startSeconds": 0.94,
+      "endSeconds": 1.46
+    },
+    {
+      "phoneme": "za",
+      "audio": "samples/za.wav",
+      "startSeconds": 1.6,
+      "endSeconds": 2.07
+    },
+    {
+      "phoneme": "da",
+      "audio": "samples/da.wav",
+      "startSeconds": 2.23,
+      "endSeconds": 2.81
+    },
+    {
+      "phoneme": "ba",
+      "audio": "samples/ba.wav",
+      "startSeconds": 2.92,
+      "endSeconds": 3.49
+    }
+  ],
+  "status": "source-segments-only",
+  "note": "This package contains source segments for training. It is not a runnable Core ML voicebank until acoustic and vocoder models are added."
+}
